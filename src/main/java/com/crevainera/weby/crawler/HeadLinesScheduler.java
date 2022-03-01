@@ -1,33 +1,52 @@
 package com.crevainera.weby.crawler;
 
-import com.crevainera.weby.crawler.services.crawler.SiteCategoryCrawler;
+import com.crevainera.weby.crawler.services.crawler.CategoryArticleCrawler;
+import com.crevainera.weby.crawler.services.helper.CategoryHelper;
+import com.crevainera.weby.crawler.util.CategorySorterUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.util.concurrent.ExecutorService;
 
 @Component
 @Slf4j
 public class HeadLinesScheduler {
 
-    private SiteCategoryCrawler crawlerSitePool;
+    public static final String OK = "OK";
+    private CategoryHelper categoryHelper;
+    private ExecutorService headLinesBySitePoolSize;
+    private CategoryArticleCrawler categoryArticleCrawler;
 
     @Autowired
-    public HeadLinesScheduler(final SiteCategoryCrawler crawlerSitePool) {
-        this.crawlerSitePool = crawlerSitePool;
+    public HeadLinesScheduler(CategoryHelper categoryHelper, ExecutorService headLinesBySitePoolSize, CategoryArticleCrawler categoryArticleCrawler) {
+        this.categoryHelper = categoryHelper;
+        this.headLinesBySitePoolSize = headLinesBySitePoolSize;
+        this.categoryArticleCrawler = categoryArticleCrawler;
     }
 
     @PostConstruct
     public void onStartup() {
-        crawlerSitePool.run();
+        runCrawler();
     }
-
 
     @Scheduled(cron = "${crawler.cron.expression}")
     public void executePeriodically() {
-        log.info("executePeriodically");
-        crawlerSitePool.run();
+        runCrawler();
+    }
+
+    private void runCrawler() {
+        log.debug("crawling Sites");
+
+        CategorySorterUtil.sortToDistibuteSiteWorkLoadEqually(categoryHelper.getAllSitesCategories()).forEach(category -> {
+            headLinesBySitePoolSize.submit(() -> {
+                log.debug("crawling site:  " + category.getSite().getTitle() + ", category: " + category.getTitle());
+                categoryArticleCrawler.crawlCategory(category);
+
+                return OK;
+            });
+        });
     }
 }

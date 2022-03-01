@@ -15,7 +15,7 @@
 	<description>Weby Crawler</description>
 
 	<properties>
-		<java.version>1.8</java.version>
+		<java.version>11</java.version>
 	</properties>
 
 	<dependencies>
@@ -52,8 +52,8 @@
 		</dependency>
 		<dependency>
 			<groupId>org.codehaus.groovy</groupId>
-			<artifactId>groovy-console</artifactId>
-			<version>2.0.1</version>
+			<artifactId>groovy</artifactId>
+			<version>3.0.9</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -123,7 +123,12 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
 	<build>
 		<plugins>

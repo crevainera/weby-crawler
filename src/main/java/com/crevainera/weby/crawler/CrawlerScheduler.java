@@ -13,7 +13,7 @@ import java.util.concurrent.ExecutorService;
 
 @Component
 @Slf4j
-public class HeadLinesScheduler {
+public class CrawlerScheduler {
 
     public static final String OK = "OK";
     private CategoryHelper categoryHelper;
@@ -21,7 +21,7 @@ public class HeadLinesScheduler {
     private CategoryArticleCrawler categoryArticleCrawler;
 
     @Autowired
-    public HeadLinesScheduler(CategoryHelper categoryHelper, ExecutorService headLinesBySitePoolSize, CategoryArticleCrawler categoryArticleCrawler) {
+    public CrawlerScheduler(CategoryHelper categoryHelper, ExecutorService headLinesBySitePoolSize, CategoryArticleCrawler categoryArticleCrawler) {
         this.categoryHelper = categoryHelper;
         this.headLinesBySitePoolSize = headLinesBySitePoolSize;
         this.categoryArticleCrawler = categoryArticleCrawler;

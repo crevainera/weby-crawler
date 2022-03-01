@@ -20,6 +20,8 @@ public class Category {
     private Boolean enabled;
     @Column(name = "site_id")
     private long siteId;
+    @Transient
+    private Site site;
 
     @JsonIgnore
     @ManyToOne(

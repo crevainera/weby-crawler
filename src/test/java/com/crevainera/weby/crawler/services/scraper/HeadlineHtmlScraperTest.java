@@ -101,9 +101,8 @@ class HeadlineHtmlScraperTest {
 
     private void scrapedTextFromFirstHeadlineShouldMatchWithExpectedText(final String rule, final String scraped,
                                                                          final String documentUrl,
-                                                                         final String articleRule)
-            throws WebyException {
-        Document document = getDocument(documentUrl);
+                                                                         final String articleRule) throws WebyException {
+        Document document =getDocument(documentUrl) ;
         Element firstElement = headlineHtmlScraper.getHeadLineElements(document, articleRule).first();
         String scrapedResult = headlineHtmlScraper.getPlainText(firstElement, rule).orElse(StringUtils.EMPTY);
 

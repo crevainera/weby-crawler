@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
 
-import static com.crevainera.weby.crawler.config.ActiveMQConfiguration.ARTICLE_ID_MESSAGE_QUEUE;
+import static com.crevainera.weby.crawler.config.ActiveMQConfiguration.ARTICLE_ID_MESSAGE_QUEUE_FOR_THUMB_IMAGES;
 
 @Component
 @Slf4j
@@ -19,7 +19,7 @@ public class ImageListener {
         this.imageService = imageService;
     }
 
-    @JmsListener(destination = ARTICLE_ID_MESSAGE_QUEUE, containerFactory = "jmsFactory")
+    @JmsListener(destination = ARTICLE_ID_MESSAGE_QUEUE_FOR_THUMB_IMAGES, containerFactory = "jmsFactory")
     public void receiveMessage(final Long articleId) {
         log.debug("Message received article.id(" + articleId + ")");
         imageService.process(Long.valueOf(articleId));

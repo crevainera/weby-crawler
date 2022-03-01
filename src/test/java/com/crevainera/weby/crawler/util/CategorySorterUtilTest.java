@@ -16,7 +16,7 @@ class CategorySorterUtilTest {
 
     /**
      * Scenario:
-     * Executes {@link CategorySorterUtil#getIntermixedPerSite(List)} with a random mixed {@link List<Category>}
+     * Executes {@link CategorySorterUtil#sortToDistibuteSiteWorkLoadEqually(List)} with a random mixed {@link List<Category>}
      *
      * Expectation:
      * Should return a {@link List<Category>} intermixed by siteId
@@ -33,7 +33,7 @@ class CategorySorterUtilTest {
         categoryList.add(createCategoryStub(9));
         categoryList.add(createCategoryStub(4));
 
-        List<Category> categoryResults = CategorySorterUtil.getIntermixedPerSite(categoryList);
+        List<Category> categoryResults = CategorySorterUtil.sortToDistibuteSiteWorkLoadEqually(categoryList);
 
         assertNotNull(categoryResults);
         assertEquals(8, categoryList.size());

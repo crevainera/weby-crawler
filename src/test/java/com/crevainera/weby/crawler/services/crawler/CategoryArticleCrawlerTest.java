@@ -62,6 +62,7 @@ class CategoryArticleCrawlerTest {
         category.setUrl(category1Url);
         category.setLabel(label);
         category.setSiteId(site.getId());
+        category.setSite(site);
         category.setScrapRule(scrapRule);
 
         doReturn(document).when(documentFromHtml).getDocument(category1Url);
@@ -76,7 +77,7 @@ class CategoryArticleCrawlerTest {
         doReturn(Arrays.asList(createHeadLineStubDto(1L), createHeadLineStubDto(2L)))
                 .when(headlineListScraper).getHeadLines(document, scrapRule);
 
-        categoryArticleCrawler.crawlCategory(site, category);
+        categoryArticleCrawler.crawlCategory(category);
 
         verify(articleRepository, times(2)).save(any(Article.class));
     }
@@ -98,7 +99,7 @@ class CategoryArticleCrawlerTest {
         doReturn(storedArticleSlice).when(articleRepository).findBySiteAndLabelList(eq(site), eq(category.getLabel()),
                 any(PageRequest.class));
 
-        categoryArticleCrawler.crawlCategory(site, category);
+        categoryArticleCrawler.crawlCategory(category);
 
         verify(articleRepository, times(0)).save(any(Article.class));
     }
@@ -120,7 +121,7 @@ class CategoryArticleCrawlerTest {
 
         doReturn(storedArticleWithOtherCategory).when(articleRepository).findByUrl(headLineDto1.getUrl());
 
-        categoryArticleCrawler.crawlCategory(site, category);
+        categoryArticleCrawler.crawlCategory(category);
 
         verify(articleRepository, times(1)).save(any(Article.class));
     }

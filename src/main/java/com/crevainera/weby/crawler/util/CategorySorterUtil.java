@@ -23,7 +23,7 @@ public class CategorySorterUtil {
      *
      * @return {@link List<Category>} intermixed by siteId
      */
-    public static List<Category> getIntermixedPerSite(final List<Category> categoryList) {
+    public static List<Category> sortToDistibuteSiteWorkLoadEqually(final List<Category> categoryList) {
         Map<Long, List<Category>> categoryMap = categoryList.stream().collect(Collectors.groupingBy(Category::getSiteId));
 
         Long[] siteIds = categoryMap.keySet().toArray(new Long[categoryMap.size()]);

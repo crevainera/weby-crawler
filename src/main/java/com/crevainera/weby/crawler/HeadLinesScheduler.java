@@ -21,13 +21,13 @@ public class HeadLinesScheduler {
 
     @PostConstruct
     public void onStartup() {
-        crawlerSitePool.crawlSites();
+        crawlerSitePool.run();
     }
 
 
     @Scheduled(cron = "${crawler.cron.expression}")
     public void executePeriodically() {
         log.info("executePeriodically");
-        crawlerSitePool.crawlSites();
+        crawlerSitePool.run();
     }
 }

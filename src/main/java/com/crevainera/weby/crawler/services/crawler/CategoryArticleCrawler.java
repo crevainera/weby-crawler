@@ -15,12 +15,13 @@ import org.springframework.data.domain.Slice;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.crevainera.weby.crawler.config.ActiveMQConfiguration.ARTICLE_ID_MESSAGE_QUEUE;
+import static com.crevainera.weby.crawler.config.ActiveMQConfiguration.ARTICLE_ID_MESSAGE_QUEUE_FOR_THUMB_IMAGES;
 import static com.crevainera.weby.crawler.constant.WebyConstant.CRAWLER_ERROR;
 
 /**
@@ -48,77 +49,68 @@ public class CategoryArticleCrawler {
         this.headlineListScraper = headlineListScraper;
     }
 
-    public void crawlCategory(final Site site, final Category category) {
-        ScrapRule scrapRule = category.getScrapRule();
-        try {
-            log.debug("crawling category: " + category.getUrl());
+    public void crawlCategory(Category category) {
 
-            Document categoryDocument = documentFromHtml.getDocument(category.getUrl());
+        log.debug("crawling category: " + category.getUrl());
 
-            filterNewCategoryHeadlines(site, category,
-                headlineListScraper.getHeadLines(categoryDocument, scrapRule)).forEach(
-                    headLine -> {
-                        Optional<Article> article = getTheArticleForAllCategories(headLine.getUrl());
+        getNewHeadlines(category).forEach(headLine -> {
+                Optional<Article> article = getArticleFromDatabase(headLine.getUrl());
+                if (article.isPresent()) {
+                    article.get().getLabelList().add(category.getLabel());
+                    articleRepository.save(article.get());
+                } else {
+                    Article newArticle = createNewArticle(category, headLine);
+                    articleRepository.save(newArticle);
 
-                        if (article.isPresent()) {
-                            updateArticle(article.get(), category);
-                        } else {
-                            saveNewArticle(site, category, headLine);
-                        }
+                    if (category.getSite().getScrapThumbEnabled() && StringUtils.isNotBlank(newArticle.getThumbUrl())) {
+                        jmsTemplate.convertAndSend(ARTICLE_ID_MESSAGE_QUEUE_FOR_THUMB_IMAGES, newArticle.getId());
                     }
-                );
-        } catch (WebyException e) {
-            log.error(String.format(CRAWLER_ERROR.getMessage(), e.getMessage(), category.getUrl()));
-        }
+                }
+            });
     }
 
-    private Optional<Article> getTheArticleForAllCategories(final String url) {
+    private Optional<Article> getArticleFromDatabase(final String url) {
         return Optional.ofNullable(articleRepository.findByUrl(url));
     }
 
-    private List<HeadLineDto> filterNewCategoryHeadlines(final Site site, final Category category,
-                                                         final List<HeadLineDto> headLineDtoList) {
+    private List<HeadLineDto> getNewHeadlines(final Category category) {
+        try {
+            Document categoryPage = documentFromHtml.getDocument(category.getUrl());
+            final List<HeadLineDto> headLineDtoList = headlineListScraper.getHeadLines(categoryPage, category.getScrapRule());
 
-        Slice<Article> articleSlice = articleRepository.findBySiteAndLabelList(site, category.getLabel(),
-                PageRequest.of(1, headLineDtoList.size()));
+            Slice<Article> articleSlice = articleRepository.findBySiteAndLabelList(category.getSite(), category.getLabel(),
+                    PageRequest.of(1, headLineDtoList.size()));
 
-        if (articleSlice != null) {
-            List<String> databaseUrls = articleSlice.stream().map(article -> article.getUrl())
-                    .collect(Collectors.toList());
-
-            if (!databaseUrls.isEmpty()) {
-                return headLineDtoList.stream()
-                        .filter(headLineDto -> !databaseUrls.contains(headLineDto.getUrl()))
+            if (articleSlice != null) {
+                List<String> databaseUrls = articleSlice.stream().map(article -> article.getUrl())
                         .collect(Collectors.toList());
+
+                if (!databaseUrls.isEmpty()) {
+                    return headLineDtoList.stream()
+                            .filter(headLineDto -> !databaseUrls.contains(headLineDto.getUrl()))
+                            .collect(Collectors.toList());
+                }
             }
+        } catch (WebyException e) {
+            log.error(String.format(CRAWLER_ERROR.getMessage(), e.getMessage(), category.getUrl()));
         }
 
-        return headLineDtoList;
-
+        return Collections.emptyList();
     }
 
-    private void updateArticle(final Article article, final Category category) {
-        article.getLabelList().add(category.getLabel());
-        articleRepository.save(article);
-    }
-
-    private void saveNewArticle(final Site site, final Category category, final HeadLineDto headLineDto) {
+    private Article createNewArticle(final Category category, final HeadLineDto headLineDto) {
         Article article = new Article();
         article.setTitle(headLineDto.getTitle());
         article.setUrl(headLineDto.getUrl());
-        getFullThumbUrl(site, headLineDto.getThumbUrl()).ifPresent(article::setThumbUrl);
+        getFullThumbUrl(category.getSite(), headLineDto.getThumbUrl()).ifPresent(article::setThumbUrl);
         article.setScrapDate(new Date());
-        article.setSite(site);
+        article.setSite(category.getSite());
 
         if (!article.getLabelList().contains(category.getLabel())) {
             article.getLabelList().add(category.getLabel());
         }
 
-        articleRepository.save(article);
-
-        if (site.getScrapThumbEnabled() && StringUtils.isNotBlank(article.getThumbUrl())) {
-            jmsTemplate.convertAndSend(ARTICLE_ID_MESSAGE_QUEUE, article.getId());
-        }
+        return article;
     }
 
     private Optional<String> getFullThumbUrl(final Site site, final String url) {

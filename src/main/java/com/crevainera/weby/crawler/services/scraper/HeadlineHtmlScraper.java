@@ -26,7 +26,7 @@ public class HeadlineHtmlScraper {
 
     public Elements getHeadLineElements(final Document document, final String scriptText) throws WebyException {
        try {
-        return (Elements) createGroovyShell(document).evaluate(scriptText);
+            return (Elements) createGroovyShell(document).evaluate(scriptText);
         } catch (Exception e) {
             log.error(String.format(SCRAPER_DOCUMENT_ERROR.name(), scriptText));
             throw new WebyException(String.format(SCRAPER_DOCUMENT_ERROR.name(), scriptText));

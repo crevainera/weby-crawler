@@ -32,8 +32,8 @@ public class HeadlineListScraper {
         List<HeadLineDto> headLineList = new ArrayList<>();
 
         scraper.getHeadLineElements(document, scrapRule.getHeadline()).forEach(headline -> {
-            headLineList.add(createHeadLineDTO(headline, scrapRule));
-        });
+                headLineList.add(createHeadLineDTO(headline, scrapRule));
+            });
 
         Collections.reverse(headLineList);
 

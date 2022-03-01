@@ -11,7 +11,7 @@ import javax.jms.ConnectionFactory;
 @Configuration
 public class ActiveMQConfiguration {
 
-    public final static String ARTICLE_ID_MESSAGE_QUEUE = "article-id-message-queue";
+    public final static String ARTICLE_ID_MESSAGE_QUEUE_FOR_THUMB_IMAGES = "article-id-message-queue";
 
     @Bean
     public JmsListenerContainerFactory<?> jmsFactory(final ConnectionFactory connectionFactory,

@@ -6,7 +6,6 @@ import com.crevainera.weby.crawler.exception.WebyException;
 import com.crevainera.weby.crawler.repositories.ArticleRepository;
 import com.crevainera.weby.crawler.services.html.HtmlDocumentConnector;
 import com.crevainera.weby.crawler.services.scraper.HeadlineListScraper;
-import com.google.common.collect.Lists;
 import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,7 +33,7 @@ class CategoryArticleCrawlerTest {
     @Mock
     private ArticleRepository articleRepository;
     @Mock
-    private HeadlineListScraper headlineListScraper;
+    private HeadlineListScraper headlinesScraped;
     @Mock
     private Document document;
     @Mock
@@ -68,14 +67,24 @@ class CategoryArticleCrawlerTest {
         doReturn(document).when(documentFromHtml).getDocument(category1Url);
 
         categoryArticleCrawler = new CategoryArticleCrawler(jmsTemplate, documentFromHtml,
-                articleRepository, headlineListScraper);
+                articleRepository, headlinesScraped);
     }
 
     @Test
-    void whenScraperReturnsTwoHeadlinesThereAreNotArticlesForTheCategoryShouldSaveTwoNewArticles() throws WebyException {
+    void whenScraperReturnsTwoHeadlinesAndProperArticlesNotExistInDatabase() throws WebyException {
 
-        doReturn(Arrays.asList(createHeadLineStubDto(1L), createHeadLineStubDto(2L)))
-                .when(headlineListScraper).getHeadLines(document, scrapRule);
+        HeadLineDto headLineDto1 = createHeadLineStubDto(1L);
+        HeadLineDto headLineDto2 = createHeadLineStubDto(2L);
+        HeadLineDto headLineDto3 = createHeadLineStubDto(3L);
+        doReturn(Arrays.asList(headLineDto1, headLineDto2, headLineDto3))
+                .when(headlinesScraped).getHeadLines(document, scrapRule);
+
+        Article storedArticle1 = new Article();
+        storedArticle1.setUrl(headLineDto1.getUrl());
+        Slice<Article> storedArticleSlice = new SliceImpl<>(Arrays.asList(storedArticle1));
+
+        doReturn(storedArticleSlice).when(articleRepository).findBySiteAndLabelList(eq(site), eq(category.getLabel()),
+                any(PageRequest.class));
 
         categoryArticleCrawler.crawlCategory(category);
 
@@ -88,12 +97,11 @@ class CategoryArticleCrawlerTest {
         HeadLineDto headLineDto1 = createHeadLineStubDto(1L);
 
         doReturn(Arrays.asList(headLineDto1))
-                .when(headlineListScraper).getHeadLines(document, scrapRule);
+                .when(headlinesScraped).getHeadLines(document, scrapRule);
 
         Article storedArticle1 = new Article();
         storedArticle1.setUrl(headLineDto1.getUrl());
         List<Article> storedArticles = Arrays.asList(storedArticle1);
-
         Slice<Article> storedArticleSlice = new SliceImpl<>(storedArticles);
 
         doReturn(storedArticleSlice).when(articleRepository).findBySiteAndLabelList(eq(site), eq(category.getLabel()),
@@ -109,7 +117,7 @@ class CategoryArticleCrawlerTest {
         HeadLineDto headLineDto1 = createHeadLineStubDto(1L);
 
         doReturn(Arrays.asList(headLineDto1))
-                .when(headlineListScraper).getHeadLines(document, scrapRule);
+                .when(headlinesScraped).getHeadLines(document, scrapRule);
 
         Article storedArticle1 = new Article();
         storedArticle1.setUrl(headLineDto1.getUrl());

@@ -15,7 +15,8 @@ import java.util.concurrent.ExecutorService;
 @Slf4j
 public class CrawlerScheduler {
 
-    public static final String OK = "OK";
+    private static final String OK = "OK";
+
     private CategoryHelper categoryHelper;
     private ExecutorService headLinesBySitePoolSize;
     private CategoryArticleCrawler categoryArticleCrawler;

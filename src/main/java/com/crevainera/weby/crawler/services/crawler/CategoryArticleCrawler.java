@@ -75,24 +75,26 @@ public class CategoryArticleCrawler {
 
     private List<HeadLineDto> getNewHeadlines(final Category category) {
         try {
-            Document categoryPage = documentFromHtml.getDocument(category.getUrl());
-            final List<HeadLineDto> headLineDtoList = headlineListScraper.getHeadLines(categoryPage, category.getScrapRule());
+            final Document categoryPage = documentFromHtml.getDocument(category.getUrl());
+            final List<HeadLineDto> pageHeadLines = headlineListScraper.getHeadLines(categoryPage, category.getScrapRule());
+            List<String> databaseUrls = getCategoryUrlsFromDatabase(category, pageHeadLines.size());
 
-            Slice<Article> articleSlice = articleRepository.findBySiteAndLabelList(category.getSite(), category.getLabel(),
-                    PageRequest.of(1, headLineDtoList.size()));
-
-            if (articleSlice != null) {
-                List<String> databaseUrls = articleSlice.stream().map(article -> article.getUrl())
+            return pageHeadLines.stream().filter(headLine -> !databaseUrls.contains(headLine.getUrl()))
                         .collect(Collectors.toList());
-
-                if (!databaseUrls.isEmpty()) {
-                    return headLineDtoList.stream()
-                            .filter(headLineDto -> !databaseUrls.contains(headLineDto.getUrl()))
-                            .collect(Collectors.toList());
-                }
-            }
         } catch (WebyException e) {
             log.error(String.format(CRAWLER_ERROR.getMessage(), e.getMessage(), category.getUrl()));
+        }
+
+        return Collections.emptyList();
+    }
+
+    private List<String> getCategoryUrlsFromDatabase(final Category category, final int size) {
+        Slice<Article> articleSlice = articleRepository.findBySiteAndLabelList(category.getSite(), category.getLabel(),
+                PageRequest.of(1, size));
+
+        if (articleSlice != null) {
+            return articleSlice.stream().map(article -> article.getUrl())
+                    .collect(Collectors.toList());
         }
 
         return Collections.emptyList();
